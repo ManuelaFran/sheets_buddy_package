@@ -21,3 +21,7 @@ class SheetsBuddy:
 
     def open_sheet(self):
         return self.client.open_by_url(self.sheet_url)
+
+    def add_formula(self, cell, formula):
+        formatted_formula = formula.replace(',', ';')
+        self.sheet.update(cell, f'={formatted_formula}')
