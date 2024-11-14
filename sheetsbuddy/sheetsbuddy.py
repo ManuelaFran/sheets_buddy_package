@@ -1,5 +1,7 @@
 import gspread
 from google.oauth2.service_account import Credentials
+import csv
+import json
 
 
 class SheetsBuddy:
@@ -83,3 +85,16 @@ class SheetsBuddy:
                 :batchUpdate''',
                 json=body
             )
+
+    def export_to_csv(self, sheet_name, filename):
+        worksheet = self.sheet.worksheet(sheet_name)
+        data = worksheet.get_all_values()
+        with open(filename, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerows(data)
+
+    def export_to_json(self, sheet_name, filename):
+        worksheet = self.sheet.worksheet(sheet_name)
+        data = worksheet.get_all_records()
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
