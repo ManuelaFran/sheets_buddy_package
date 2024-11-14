@@ -25,3 +25,61 @@ class SheetsBuddy:
     def add_formula(self, cell, formula):
         formatted_formula = formula.replace(',', ';')
         self.sheet.update(cell, f'={formatted_formula}')
+
+    def apply_bulk_formatting(self, cell_range, color=None, bold=None,
+                              font_size=None):
+        cell_list = self.sheet.range(cell_range)
+
+        requests = []
+        if color:
+            requests.append({
+                'repeatCell': {
+                    'range': {
+                        'sheetId': self.sheet.id,
+                        'startRowIndex': cell_list[0].row - 1,
+                        'endRowIndex': cell_list[-1].row,
+                        'startColumnIndex': cell_list[0].col - 1,
+                        'endColumnIndex': cell_list[-1].col,
+                    },
+                    'cell': {
+                        'userEnteredFormat': {
+                            'backgroundColor': color
+                        }
+                    },
+                    'fields': 'userEnteredFormat.backgroundColor'
+                }
+            })
+        if bold or font_size:
+            cell_format = {}
+            if bold is not None:
+                cell_format['bold'] = bold
+            if font_size is not None:
+                cell_format['font_size'] = font_size
+            requests.append({
+                'repeatCell': {
+                    'range': {
+                        'sheetId': self.sheet.id,
+                        'startRowIndex': cell_list[0].row - 1,
+                        'endRowIndex': cell_list[-1].row,
+                        'startColumnIndex': cell_list[0].col - 1,
+                        'endColumnIndex': cell_list[-1].col
+                    },
+                    'cell': {
+                        'userEnteredFormat': {
+                            'textFormat': cell_format
+                        }
+                    },
+                    'fields': 'userEnteredFormat.textFormat'
+                }
+            })
+
+        if requests:
+            body = {
+                'requests': requests
+            }
+            self.client.request(
+                'POST',
+                f'''https://sheets.googleapis.com/v4/spreadsheets/{self.sheet.id}
+                :batchUpdate''',
+                json=body
+            )
